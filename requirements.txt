@@ -1,0 +1,8 @@
+django
+djangorestframework
+pillow
+django-cors-headers
+opencv-python-headless
+requests
+numpy
+scikit-learn
