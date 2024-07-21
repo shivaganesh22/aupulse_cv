@@ -98,4 +98,4 @@ class ReadfacesView():
                 break
         self.video.release()
         cv2.destroyAllWindows()
-ReadfacesView().read()
+# ReadfacesView().read()
