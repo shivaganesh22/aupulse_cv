@@ -7,7 +7,9 @@ import pickle
 import os
 import numpy as np
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-facedetect = cv2.CascadeClassifier('media/haarcascade_frontalface_default.xml')
+facedetect = cv2.CascadeClassifier(os.path.join(BASE_DIR,"media","haarcascade_frontalface_default.xml"))
+names_pkl = os.path.join(BASE_DIR,"media","names.pkl")
+faces_pkl = os.path.join(BASE_DIR,"media","faces_data.pkl")
 class CreateStudentView1(APIView):
     def capture_and_store_face(self, name, image_path):
         faces_data = None  # Initialize with None to check if face is captured
@@ -24,31 +26,31 @@ class CreateStudentView1(APIView):
             faces_data = resized_img  # Save the detected face
             cv2.putText(frame, "Face Captured", (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (50, 50, 255), 1)
             cv2.rectangle(frame, (x, y), (x+w, y+h), (50, 50, 255), 1)
-        cv2.imshow("Frame", frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.imshow("Frame", frame)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
         if faces_data is not None:
             faces_data = faces_data.reshape(1, -1)  # Reshape to (1, 7500)
 
-            if 'names.pkl' not in os.listdir('media/'):
+            if 'names.pkl' not in os.listdir(os.path.join(BASE_DIR,'media')):
                 names = [name]
-                with open('media/names.pkl', 'wb') as f:
+                with open(names_pkl, 'wb') as f:
                     pickle.dump(names, f)
             else:
-                with open('media/names.pkl', 'rb') as f:
+                with open(names_pkl, 'rb') as f:
                     names = pickle.load(f)
                 names.append(name)
-                with open('media/names.pkl', 'wb') as f:
+                with open(names_pkl, 'wb') as f:
                     pickle.dump(names, f)
 
-            if 'faces_data.pkl' not in os.listdir('media/'):
-                with open('media/faces_data.pkl', 'wb') as f:
+            if 'faces_data.pkl' not in os.listdir(os.path.join(BASE_DIR,'media')):
+                with open(faces_pkl, 'wb') as f:
                     pickle.dump(faces_data, f)
             else:
-                with open('media/faces_data.pkl', 'rb') as f:
+                with open(faces_pkl, 'rb') as f:
                     faces = pickle.load(f)
                 faces = np.append(faces, faces_data, axis=0)
-                with open('media/faces_data.pkl', 'wb') as f:
+                with open(faces_pkl, 'wb') as f:
                     pickle.dump(faces, f)
     def post(self, request):
         image_path = request.FILES.get('profile')
@@ -62,9 +64,9 @@ class CreateStudentView1(APIView):
 from sklearn.neighbors import KNeighborsClassifier
 class ReadfacesView():
     video=cv2.VideoCapture(0)
-    with open('media/names.pkl', 'rb') as w:
+    with open(names_pkl, 'rb') as w:
             LABELS=pickle.load(w)
-    with open('media/faces_data.pkl', 'rb') as f:
+    with open(faces_pkl, 'rb') as f:
         FACES=pickle.load(f)
     def read(self):
         print('Shape of Faces matrix --> ', self.FACES.shape)
