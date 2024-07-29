@@ -5,4 +5,6 @@ django-cors-headers
 opencv-python-headless
 requests
 numpy
-scikit-learn
+daphne
+django-channels
+face_recognition

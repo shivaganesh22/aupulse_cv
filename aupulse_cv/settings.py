@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 import os
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     "corsheaders",
+    'channels',
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 MIDDLEWARE = [
@@ -71,9 +73,13 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'aupulse_cv.wsgi.application'
-
-
+# WSGI_APPLICATION = 'aupulse_cv.wsgi.application'
+ASGI_APPLICATION = "aupulse_cv.asgi.application"
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': "channels.layers.InMemoryChannelLayer"
+    }
+}
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 

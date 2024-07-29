@@ -6,98 +6,43 @@ import cv2
 import pickle
 import os
 import numpy as np
+import face_recognition
+def home(r):
+    return render(r,'index.html')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-facedetect = cv2.CascadeClassifier(os.path.join(BASE_DIR,"media","haarcascade_frontalface_default.xml"))
-names_pkl = os.path.join(BASE_DIR,"media","names.pkl")
-faces_pkl = os.path.join(BASE_DIR,"media","faces_data.pkl")
-class CreateStudentView1(APIView):
+enc_pkl = os.path.join(BASE_DIR,"media","encodings.pkl")
+class CreateStudentView(APIView):
     def capture_and_store_face(self, name, image_path):
         faces_data = None  # Initialize with None to check if face is captured
         file_data = image_path.read()
         np_array = np.frombuffer(file_data, np.uint8)
         frame = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = facedetect.detectMultiScale(gray, 1.3, 5)
-
-        if len(faces) > 0:
-            x, y, w, h = faces[0]  # Take the first detected face
-            crop_img = frame[y:y+h, x:x+w, :]
-            resized_img = cv2.resize(crop_img, (50, 50))
-            faces_data = resized_img  # Save the detected face
-            cv2.putText(frame, "Face Captured", (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (50, 50, 255), 1)
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (50, 50, 255), 1)
-        # cv2.imshow("Frame", frame)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        if faces_data is not None:
-            faces_data = faces_data.reshape(1, -1)  # Reshape to (1, 7500)
-
-            if 'names.pkl' not in os.listdir(os.path.join(BASE_DIR,'media')):
-                names = [name]
-                with open(names_pkl, 'wb') as f:
-                    pickle.dump(names, f)
+        face_locations = face_recognition.face_locations(frame)
+        face_encodings = face_recognition.face_encodings(frame, face_locations)
+        if face_encodings:
+            face_encoding = face_encodings[0]
+            face_image = frame[face_locations[0][0]:face_locations[0][2], face_locations[0][3]:face_locations[0][1]]
+            face_image = cv2.resize(face_image, (250, 250))
+            if os.path.exists(enc_pkl):
+                with open(enc_pkl, "rb") as f:
+                    data = pickle.load(f)
             else:
-                with open(names_pkl, 'rb') as f:
-                    names = pickle.load(f)
-                names.append(name)
-                with open(names_pkl, 'wb') as f:
-                    pickle.dump(names, f)
-
-            if 'faces_data.pkl' not in os.listdir(os.path.join(BASE_DIR,'media')):
-                with open(faces_pkl, 'wb') as f:
-                    pickle.dump(faces_data, f)
-            else:
-                with open(faces_pkl, 'rb') as f:
-                    faces = pickle.load(f)
-                faces = np.append(faces, faces_data, axis=0)
-                with open(faces_pkl, 'wb') as f:
-                    pickle.dump(faces, f)
+                data = {"names": [], "encodings": []}
+            # Add new face encoding
+            data["names"].append(name)
+            data["encodings"].append(face_encoding)
+            with open(enc_pkl, "wb") as f:
+                pickle.dump(data, f)
+            print(f"Added new face: {name}")
+        else:
+            print("No face detected. Please try again.")
     def post(self, request):
         image_path = request.FILES.get('profile')
         name = request.data.get('hall_ticket')
-
         if image_path and name:
             self.capture_and_store_face(name, image_path)
             return Response({"status": "success"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
-from sklearn.neighbors import KNeighborsClassifier
-class ReadfacesView():
-    video=cv2.VideoCapture(0)
-    with open(names_pkl, 'rb') as w:
-            LABELS=pickle.load(w)
-    with open(faces_pkl, 'rb') as f:
-        FACES=pickle.load(f)
-    def read(self):
-        print('Shape of Faces matrix --> ', self.FACES.shape)
 
-        knn=KNeighborsClassifier(n_neighbors=1)
-        knn.fit(self.FACES, self.LABELS)
 
-        while True:
-            ret,frame=self.video.read()
-            gray=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces=facedetect.detectMultiScale(gray, 1.3 ,5)
-            for (x,y,w,h) in faces:
-                crop_img=frame[y:y+h, x:x+w, :]
-                resized_img=cv2.resize(crop_img, (50,50)).flatten().reshape(1,-1)
-                output=knn.predict(resized_img)
-                # ts=time.time()
-                # date=datetime.fromtimestamp(ts).strftime("%d-%m-%Y")
-                # timestamp=datetime.fromtimestamp(ts).strftime("%H:%M-%S")
-                # exist=os.path.isfile("Attendance/Attendance_" + date + ".csv")
-                cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 1)
-                cv2.rectangle(frame,(x,y),(x+w,y+h),(50,50,255),2)
-                cv2.rectangle(frame,(x,y-40),(x+w,y),(50,50,255),-1)
-                cv2.putText(frame, str(output[0]), (x,y-15), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,255), 1)
-                cv2.rectangle(frame, (x,y), (x+w, y+h), (50,50,255), 1)
-                # attendance=[str(output[0]), str(timestamp)]
-            # imgBackground[162:162 + 480, 55:55 + 640] = frame
-            cv2.imshow("Frame",frame)
-            k=cv2.waitKey(1)
-
-            if k==ord('q'):
-                break
-        self.video.release()
-        cv2.destroyAllWindows()
-# ReadfacesView().read()

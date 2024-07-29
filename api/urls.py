@@ -3,6 +3,6 @@ from rest_framework.routers import DefaultRouter
 from api.views import *
 
 urlpatterns = [
-    path('student/process/',CreateStudentView1.as_view()),
+    path('student/',CreateStudentView.as_view()),
    
 ]
