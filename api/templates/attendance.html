@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Batch, Branch, Section, Semester</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .dropdown {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dropdown">
+        <label for="batchSelect">Select Batch:</label>
+        <select id="batchSelect">
+            <option value="">Select Batch</option>
+            <!-- Batches will be loaded here dynamically -->
+        </select>
+    </div>
+
+    <div class="dropdown">
+        <label for="branchSelect">Select Branch:</label>
+        <select id="branchSelect" disabled>
+            <option value="">Select Branch</option>
+            <!-- Branches will be loaded here dynamically -->
+        </select>
+    </div>
+
+    <div class="dropdown">
+        <label for="semesterSelect">Select Semester:</label>
+        <select id="semesterSelect" disabled>
+            <option value="">Select Semester</option>
+            <!-- Semesters will be loaded here dynamically -->
+        </select>
+    </div>
+
+    <div class="dropdown">
+        <label for="sectionSelect">Select Section:</label>
+        <select id="sectionSelect" disabled>
+            <option value="">Select Section</option>
+            <!-- Sections will be loaded here dynamically -->
+        </select>
+    </div>
+
+    <button id="submitButton" disabled>Submit</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const batchSelect = document.getElementById('batchSelect');
+            const branchSelect = document.getElementById('branchSelect');
+            const semesterSelect = document.getElementById('semesterSelect');
+            const sectionSelect = document.getElementById('sectionSelect');
+            const submitButton = document.getElementById('submitButton');
+
+            // Load batches
+            fetch('https://aupulse-api.vercel.app/api/batch/')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(batch => {
+                        const option = document.createElement('option');
+                        option.value = batch.id;
+                        option.textContent = `${batch.start} - ${batch.end}`;
+                        batchSelect.appendChild(option);
+                    });
+                });
+
+            // Load branches based on selected batch
+            batchSelect.addEventListener('change', function () {
+                const batchId = this.value;
+                branchSelect.disabled = true;
+                branchSelect.innerHTML = '<option value="">Select Branch</option>';
+                semesterSelect.disabled = true;
+                semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+                sectionSelect.disabled = true;
+                sectionSelect.innerHTML = '<option value="">Select Section</option>';
+
+                if (batchId) {
+                    fetch(`https://aupulse-api.vercel.app/api/branch/?batch=${batchId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(branch => {
+                                const option = document.createElement('option');
+                                option.value = branch.id;
+                                option.textContent = branch.name;
+                                branchSelect.appendChild(option);
+                            });
+                            branchSelect.disabled = false;
+                        });
+
+                    // Load semesters based on selected batch
+                    fetch(`https://aupulse-api.vercel.app/api/semester/?batch=${batchId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(semester => {
+                                const option = document.createElement('option');
+                                option.value = semester.id;
+                                option.textContent = `${semester.year} - ${semester.semester}`;
+                                semesterSelect.appendChild(option);
+                            });
+                            semesterSelect.disabled = false;
+                        });
+                }
+            });
+
+            // Load sections based on selected branch
+            branchSelect.addEventListener('change', function () {
+                const branchId = this.value;
+                sectionSelect.disabled = true;
+                sectionSelect.innerHTML = '<option value="">Select Section</option>';
+
+                if (branchId) {
+                    fetch(`https://aupulse-api.vercel.app/api/section/?branch=${branchId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(section => {
+                                const option = document.createElement('option');
+                                option.value = section.id;
+                                option.textContent = section.name;
+                                sectionSelect.appendChild(option);
+                            });
+                            sectionSelect.disabled = false;
+                            submitButton.disabled = false;
+                        });
+                }
+            });
+
+            // Handle form submission
+            submitButton.addEventListener('click', function () {
+                const batchId = batchSelect.value;
+                const branchId = branchSelect.value;
+                const semesterId = semesterSelect.value;
+                const sectionId = sectionSelect.value;
+
+                if (batchId && branchId && semesterId && sectionId) {
+                    // Send data to view.py (use fetch or form submission)
+                    fetch('/api/attendance/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            batch_id: batchId,
+                            branch_id: branchId,
+                            semester_id: semesterId,
+                            section_id: sectionId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

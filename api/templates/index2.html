@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Django Channels + OpenCV RTSP Stream</title>
+    <title>Django Channels + OpenCV</title>
     <link href="https://fonts.googleapis.com/css?family=M PLUS Rounded 1c" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://use.fontawesome.com/fe459689b4.js"></script>
@@ -167,49 +168,121 @@
   </head>
 
   <body>
-
-    <div style="border-radius: 10px;" class="align-center-scale">
-        <img id='client' class="video"  alt="screen">
+    <div style='font-weight:800; font-size:5vmin;' class="align-center-scale">
+        
     </div>
+
+    <video id='video' style='display:none;' autoplay playsinline></video>
+    <canvas id="canvas" style='display:none;' width="400" height="300"></canvas>
+    <div style="border-radius: 10px;" class="align-center-scale">
+        <img id='client' class="video" src='https://cdn.discordapp.com/attachments/848543264783990804/1051901701654851705/face.gif' alt="screen">
+    </div>
+
+    
+
   </body>
+ 
+
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    var video = document.getElementById('video');
     var img = document.getElementById("client");
     var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    var ws;
+    var mode = true;
+    
+    video.width = 400;
+    video.height = 300;
+    Mode()
+    // Scale the graph canvas accordingly to the window size
+    var widthupdate = window.innerWidth*0.6;
+    var heightupdate = window.innerHeight*0.5;
 
-    function startRTSPStream() {
-        var rtspLink = "rtsp://shivaganeshdorn-21072.portmap.host:21072/h264.sdp";
-        
+    function Mode(){
+        if (mode == true){
+            mode = false;
+            var ws = new WebSocket(
+                ws_scheme + '://' + window.location.host + '/ws/stream/'
+            );
+            ws.onopen = (event) => {
+                console.log('websocket connected!!!');
+            };
+            ws.onmessage = (event) => {
+            //console.log("WebSocket message received: ", event.data);
+            frameUpdate = event.data;
+            img.src = "data:image/jpeg;base64," + frameUpdate;
+            
+            };
+            ws.onclose = (event) => {
+                console.log('Close');
+            };
+            if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+            video.srcObject = stream;
+            video.play();
+            var width = video.width;
+            var height = video.height;
+            var delay = 100; // adjust the delay to fit your needs (ms)
+            var jpegQuality = 0.7; // adjust the quality to fit your needs (0.0 -> 1.0)
 
-        if (ws) {
-            ws.close();
+            setInterval(function() {
+            context.drawImage(video, 0, 0, width, height);
+            canvas.toBlob(function(blob) {
+                if (ws.readyState == WebSocket.OPEN) {
+                    if (mode == true){
+                        ws.send(new Uint8Array([]));
+                    } else {
+                        ws.send(blob);
+                    }
+                }
+            }, 'image/jpeg', jpegQuality);
+            }, delay);
+
+            setTimeout(function(){
+                
+                var chart = c3.generate({
+                    bindto: '#chart0',
+                    size: {
+                    height: heightupdate,
+                    width: widthupdate },
+                    data: {
+                        url: urlData,
+                        type: 'line'
+                    },
+                    axis: {
+                    y: {
+                        max: 30,
+                        min: -0.2,
+                    }
+                    },       
+                    subchart: {
+                    show: false
+                    },
+                    zoom: {
+                    enabled: true
+                    }});
+                
+                    createchart = setInterval(function() {
+                        chart.load({
+                            url: urlData,
+                            type: 'line'
+                        });
+                    }, 2000);
+                },500);
+            });}
         }
-
-        ws = new WebSocket(
-            ws_scheme + '://' + window.location.host + '/ws/stream/'
-        );
-
-        ws.onopen = (event) => {
-            console.log('WebSocket connected for RTSP stream');
-            ws.send(JSON.stringify({action: 'start_stream', rtsp_url: rtspLink}));
-        };
-
-        ws.onmessage = (event) => {
-            img.src = "data:image/jpeg;base64," + event.data;
-        };
-
-        ws.onclose = (event) => {
-            console.log('WebSocket closed');
-        };
-    }
-    startRTSPStream();
-    function stopRTSPStream() {
-        if (ws) {
-            ws.send(JSON.stringify({action: 'stop_stream'}));
-            ws.close();
+        else if (mode == false){
+            mode = true;
+            video.pause();
+            video.srcObject.getVideoTracks()[0].stop();
+            video.srcObject = null;
+            setTimeout(function() {
+                clearInterval(createchart);
+            },500);
         }
-    }
-  </script>
+    };
+    </script>
 </html>

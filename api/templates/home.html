@@ -1,0 +1,29 @@
+<center>
+    {%if messages%}
+  {%for message in messages%}
+  <center>
+    {%if 'success' in message.tags %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:">
+        <use xlink:href="#check-circle-fill" />
+      </svg>
+      {{message}}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {%else%}
+
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:">
+        <use xlink:href="#exclamation-triangle-fill" />
+      </svg>
+      {{message}}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {%endif%}
+  </center>
+  {%endfor%}
+  {%endif%}
+    <a href="/faces">Update Faces</a><br>
+    <a href="/capture">Take Attendance</a><br>
+    <a href="/attendance">Update Attendance</a>
+</center>
