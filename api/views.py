@@ -9,8 +9,6 @@ import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-def home(r):
-    return render(r,'index2.html')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 enc_pkl = os.path.join(BASE_DIR,"media","encodings.pkl")
 def home(r):

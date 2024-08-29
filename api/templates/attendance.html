@@ -36,6 +36,38 @@
         button:hover {
             background-color: #45a049;
         }
+
+        /* Toast styling */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;} 
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;} 
+            to {bottom: 0; opacity: 0;}
+        }
     </style>
 </head>
 <body>
@@ -74,6 +106,9 @@
 
     <button id="submitButton" disabled>Submit</button>
 
+    <!-- Toast Container -->
+    <div id="toast">Submission Successful!</div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const batchSelect = document.getElementById('batchSelect');
@@ -81,6 +116,7 @@
             const semesterSelect = document.getElementById('semesterSelect');
             const sectionSelect = document.getElementById('sectionSelect');
             const submitButton = document.getElementById('submitButton');
+            const toast = document.getElementById('toast');
 
             // Load batches
             fetch('https://aupulse-api.vercel.app/api/batch/')
@@ -179,12 +215,21 @@
                     .then(response => response.json())
                     .then(data => {
                         console.log('Success:', data);
+                        showToast(); // Show toast message on success
                     })
                     .catch((error) => {
                         console.error('Error:', error);
                     });
                 }
             });
+
+            // Function to show toast message
+            function showToast() {
+                toast.className = "show";
+                setTimeout(function () {
+                    toast.className = toast.className.replace("show", "");
+                }, 3000);
+            }
         });
     </script>
 

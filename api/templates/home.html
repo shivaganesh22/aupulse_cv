@@ -1,29 +1,96 @@
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<!-- Optional theme -->
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<style>
+  /* Basic styling */
+  body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+  }
+
+  .dropdown {
+      margin-bottom: 20px;
+  }
+
+  label {
+      display: block;
+      margin-bottom: 5px;
+  }
+
+  select, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+  }
+
+  button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+  }
+
+  button:hover {
+      background-color: #45a049;
+  }
+
+  /* Toast styling */
+  #toast {
+      visibility: hidden;
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 2px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      font-size: 17px;
+  }
+
+  #toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  }
+
+  @keyframes fadein {
+      from {bottom: 0; opacity: 0;} 
+      to {bottom: 30px; opacity: 1;}
+  }
+
+  @keyframes fadeout {
+      from {bottom: 30px; opacity: 1;} 
+      to {bottom: 0; opacity: 0;}
+  }
+</style>
+<div id="toast">Faces Updated</div>
+<script>
+  function showToast() {
+            toast.className = "show";
+            setTimeout(function () {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+</script>
 <center>
     {%if messages%}
   {%for message in messages%}
   <center>
-    {%if 'success' in message.tags %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:">
-        <use xlink:href="#check-circle-fill" />
-      </svg>
-      {{message}}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {%else%}
-
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-      <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:">
-        <use xlink:href="#exclamation-triangle-fill" />
-      </svg>
-      {{message}}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {%endif%}
+   <script>
+    showToast()
+   </script>
   </center>
   {%endfor%}
   {%endif%}
-    <a href="/faces">Update Faces</a><br>
-    <a href="/capture">Take Attendance</a><br>
-    <a href="/attendance">Update Attendance</a>
+  <br>
+  <a href="/faces" class="btn btn-primary">Update Faces</a>
+  <a href="/capture" class="btn btn-warning mt-2">Take Attendance</a>
+  <a href="/attendance" class="btn btn-success mt-2">Update Attendance</a>
 </center>
